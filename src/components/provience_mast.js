@@ -79,8 +79,6 @@ export default function Provience_mast() {
 
   const openNew = () => {
     product.province_id = createId();
-    console.log(product.province_id);
-    setProduct(emptyProduct);
     setSubmitted(false);
     setProductDialog(true);
   };
@@ -101,54 +99,22 @@ export default function Provience_mast() {
   //  =================================== SAVE ITEM function =====================================
   const saveProduct = async () => {
     setSubmitted(true);
+    console.log(product);
+    if (!exist) {
+      if (product.province_name.trim() && product.province_status) {
+        let _products = [...products];
+        let _product = { ...product };
 
-    if (
-      product.province_status &&
-      product.country_id &&
-      product.province_name
-    ) {
-      let _products = [...products];
-      let _product = { ...product };
+        if (product.id) {
+          const index = findIndexById(product.id);
+          _products[index] = _product;
 
-      if (product.province_id) {
-        const index = findIndexById(product.province_id);
-        _products[index] = _product;
-
-        const response = await fetch(
-          `http://86.48.3.100:1337/api/province-mstrs/${product.id}}`,
-          {
-            method: "PUT",
-            body: JSON.stringify({
-              data: {
-                province_name: _product.province_name,
-                province_status: _product.province_status,
-                country_mstr: _product.country_id,
-              },
-            }),
-            headers: {
-              "Content-type": "application/json; charset=UTF-8",
-            },
-          }
-        );
-
-        toast.current.show({
-          severity: "success",
-          summary: "Successful",
-          detail: "Product Updated",
-          life: 3000,
-        });
-      } else {
-        try {
-          _product.province_id = createId();
-          _products.push(_product);
-
-          const response = await fetch(
-            "http://86.48.3.100:1337/api/province-mstrs",
+          const responce = await fetch(
+            `http://86.48.3.100:1337/api/province-mstrs/${product.id}}`,
             {
-              method: "POST",
+              method: "PUT",
               body: JSON.stringify({
                 data: {
-                  province_id: _product.province_id,
                   province_name: _product.province_name,
                   province_status: _product.province_status,
                   country_mstr: _product.country_id,
@@ -159,22 +125,55 @@ export default function Provience_mast() {
               },
             }
           );
-          const data = await response.json();
 
           toast.current.show({
             severity: "success",
             summary: "Successful",
-            detail: "Product Created",
+            detail: "Product Updated",
             life: 3000,
           });
-        } catch (error) {
-          console.log("error", error.message);
-        }
-      }
+        } else {
+          try {
+            _product.province_id = createId();
 
-      setProducts(_products);
-      setProductDialog(false);
-      setProduct(emptyProduct);
+            const response = await fetch(
+              "http://86.48.3.100:1337/api/province-mstrs",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  data: {
+                    province_id: _product.province_id,
+                    province_name: _product.province_name,
+                    province_status: _product.province_status,
+                    country_mstr: _product.country_id,
+                  },
+                }),
+                headers: {
+                  "Content-type": "application/json; charset=UTF-8",
+                },
+              }
+            );
+
+            const data = await response.json();
+            _product.id = data.data.id;
+            _products.push(_product);
+
+            toast.current.show({
+              severity: "success",
+              summary: "Successful",
+              detail: "Product Created",
+              life: 3000,
+            });
+          } catch (error) {
+            console.log("error", error.message);
+          }
+        }
+
+        setProducts(_products);
+        setProductDialog(false);
+        setProduct(emptyProduct);
+        setExist(false);
+      }
     }
   };
 
@@ -277,28 +276,24 @@ export default function Provience_mast() {
     const val = (e.target && e.target.value) || "";
     let _product = { ...product };
 
-    // name == "province_name"
-    //   ? (_product[`${name}`] = val.toUpperCase())
-    //   : (_product[`${name}`] = val);
+    name == "province_name"
+      ? (_product[`${name}`] = val.toUpperCase())
+      : (_product[`${name}`] = val);
 
-    _product[`${name}`] = val;
+    if (name == "province_name") {
+      console.log("province_name");
+      const isDuplicate = products.some(
+        (item) => item.province_name.toUpperCase() === val.toUpperCase()
+      );
 
-    // Check for duplicates in the product array based on the specified property (country_name)
-    const isDuplicate = products.some((item) => item.province_name === val);
-
-    if (isDuplicate) {
-      // Handle duplicate value (e.g., show an error message, prevent further actions, etc.)
-      setSubmitted(true);
-      setExist(true);
-
-      // You can choose to return or do something else based on your requirements
-    } else {
-      setSubmitted(false);
-      setExist(false);
+      if (isDuplicate) {
+        setExist(true);
+        setSubmitted(true);
+      } else {
+        setSubmitted(false);
+        setExist(false);
+      }
     }
-
-    // Update the state only if no duplicates are found
-
     setProduct(_product);
   };
 

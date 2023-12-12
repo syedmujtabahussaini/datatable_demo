@@ -272,10 +272,7 @@ export default function Country_mast() {
         setExist(false);
       }
     }
-
-    // Update the state only if no duplicates are found
-
-    setProduct(_product);
+   setProduct(_product);
   };
 
   // const onInputNumberChange = (e, name) => {
